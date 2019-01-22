@@ -1,0 +1,82 @@
+From aadede368cb8d1f95e363602ca810effe53d13e6 Mon Sep 17 00:00:00 2001
+From: Wendly Li <wendly@flotechnologies.com>
+Date: Tue, 22 Jan 2019 09:56:23 +0000
+Subject: [PATCH] Add exclude-source-files to install
+
+---
+ setuptools/command/install.py | 31 +++++++++++++++++++++++++++----
+ 1 file changed, 27 insertions(+), 4 deletions(-)
+
+diff --git a/setuptools/command/install.py b/setuptools/command/install.py
+index 31a5ddb..e08e6a6 100644
+--- a/setuptools/command/install.py
++++ b/setuptools/command/install.py
+@@ -4,6 +4,8 @@ import glob
+ import warnings
+ import platform
+ import distutils.command.install as orig
++import importlib.util
++import os
+ 
+ import setuptools
+ 
+@@ -19,9 +21,11 @@ class install(orig.install):
+         ('old-and-unmanageable', None, "Try not to use this!"),
+         ('single-version-externally-managed', None,
+          "used by system package builders to create 'flat' eggs"),
++        ('exclude-source-files', None,
++         "remove all .py files from the generated egg"),
+     ]
+     boolean_options = orig.install.boolean_options + [
+-        'old-and-unmanageable', 'single-version-externally-managed',
++        'old-and-unmanageable', 'single-version-externally-managed', 'exclude-source-files',
+     ]
+     new_commands = [
+         ('install_egg_info', lambda self: True),
+@@ -33,6 +37,7 @@ class install(orig.install):
+         orig.install.initialize_options(self)
+         self.old_and_unmanageable = None
+         self.single_version_externally_managed = None
++        self.exclude_source_files = None
+ 
+     def finalize_options(self):
+         orig.install.finalize_options(self)
+@@ -58,14 +63,32 @@ class install(orig.install):
+     def run(self):
+         # Explicit request for old-style install?  Just do it
+         if self.old_and_unmanageable or self.single_version_externally_managed:
+-            return orig.install.run(self)
+-
+-        if not self._called_from_setup(inspect.currentframe()):
++            orig.install.run(self)
++            if self.exclude_source_files:
++                self.exclude_pyfiles()
++        elif not self._called_from_setup(inspect.currentframe()):
+             # Run in backward-compatibility mode to support bdist_* commands.
+             orig.install.run(self)
++            if self.exclude_source_files:
++                self.exclude_pyfiles()
+         else:
+             self.do_egg_install()
+ 
++    def exclude_pyfiles(self):
++        if os.path.isdir(self.build_lib):
++            dry_run = self.dry_run
++            self.dry_run = True
++            outfiles = self.copy_tree(self.build_lib, self.install_lib)
++            self.dry_run = dry_run
++
++        for file in outfiles:
++            if file[-3:] != ".py":
++                continue
++
++            cfile = importlib.util.cache_from_source(file)
++            os.remove(file)
++            os.rename(cfile, file + 'c')
++
+     @staticmethod
+     def _called_from_setup(run_frame):
+         """
+-- 
+2.7.4
+
