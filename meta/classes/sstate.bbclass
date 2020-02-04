@@ -406,17 +406,19 @@ python sstate_hardcode_path_unpack () {
         staging_target = d.getVar('RECIPE_SYSROOT')
         staging_host = d.getVar('RECIPE_SYSROOT_NATIVE')
 
-        if bb.data.inherits_class('native', d) or bb.data.inherits_class('cross-canadian', d):
-            sstate_sed_cmd = "sed -i -e 's:FIXMESTAGINGDIRHOST:%s:g'" % (staging_host)
-        elif bb.data.inherits_class('cross', d) or bb.data.inherits_class('crosssdk', d):
-            sstate_sed_cmd = "sed -i -e 's:FIXMESTAGINGDIRTARGET:%s:g; s:FIXMESTAGINGDIRHOST:%s:g'" % (staging_target, staging_host)
-        else:
-            sstate_sed_cmd = "sed -i -e 's:FIXMESTAGINGDIRTARGET:%s:g'" % (staging_target)
+        sstate_sed_cmd = "sed -i"
 
         extra_staging_fixmes = d.getVar('EXTRA_STAGING_FIXMES') or ''
         for fixmevar in extra_staging_fixmes.split():
             fixme_path = d.getVar(fixmevar)
             sstate_sed_cmd += " -e 's:FIXME_%s:%s:g'" % (fixmevar, fixme_path)
+
+        if bb.data.inherits_class('native', d) or bb.data.inherits_class('cross-canadian', d):
+            sstate_sed_cmd += " -e 's:FIXMESTAGINGDIRHOST:%s:g'" % (staging_host)
+        elif bb.data.inherits_class('cross', d) or bb.data.inherits_class('crosssdk', d):
+            sstate_sed_cmd += " -e 's:FIXMESTAGINGDIRTARGET:%s:g; s:FIXMESTAGINGDIRHOST:%s:g'" % (staging_target, staging_host)
+        else:
+            sstate_sed_cmd += " -e 's:FIXMESTAGINGDIRTARGET:%s:g'" % (staging_target)
 
         # Add sstateinst to each filename in fixmepath, use xargs to efficiently call sed
         sstate_hardcode_cmd = "sed -e 's:^:%s:g' %s | xargs %s" % (sstateinst, fixmefn, sstate_sed_cmd)
@@ -567,21 +569,24 @@ python sstate_hardcode_path () {
     staging_host = d.getVar('RECIPE_SYSROOT_NATIVE')
     sstate_builddir = d.getVar('SSTATE_BUILDDIR')
 
-    sstate_sed_cmd = "sed -i -e 's:%s:FIXMESTAGINGDIRHOST:g'" % staging_host
-    if bb.data.inherits_class('native', d) or bb.data.inherits_class('cross-canadian', d):
-        sstate_grep_cmd = "grep -l -e '%s'" % (staging_host)
-    elif bb.data.inherits_class('cross', d) or bb.data.inherits_class('crosssdk', d):
-        sstate_grep_cmd = "grep -l -e '%s' -e '%s'" % (staging_target, staging_host)
-        sstate_sed_cmd += " -e 's:%s:FIXMESTAGINGDIRTARGET:g'" % staging_target
-    else:
-        sstate_grep_cmd = "grep -l -e '%s' -e '%s'" % (staging_target, staging_host)
-        sstate_sed_cmd += " -e 's:%s:FIXMESTAGINGDIRTARGET:g'" % staging_target
+    sstate_grep_cmd = "grep -l"
+    sstate_sed_cmd = "sed -i"
 
     extra_staging_fixmes = d.getVar('EXTRA_STAGING_FIXMES') or ''
     for fixmevar in extra_staging_fixmes.split():
         fixme_path = d.getVar(fixmevar)
         sstate_sed_cmd += " -e 's:%s:FIXME_%s:g'" % (fixme_path, fixmevar)
         sstate_grep_cmd += " -e '%s'" % (fixme_path)
+
+    sstate_sed_cmd += " -e 's:%s:FIXMESTAGINGDIRHOST:g'" % staging_host
+    if bb.data.inherits_class('native', d) or bb.data.inherits_class('cross-canadian', d):
+        sstate_grep_cmd += " -e '%s'" % (staging_host)
+    elif bb.data.inherits_class('cross', d) or bb.data.inherits_class('crosssdk', d):
+        sstate_grep_cmd += " -e '%s' -e '%s'" % (staging_target, staging_host)
+        sstate_sed_cmd += " -e 's:%s:FIXMESTAGINGDIRTARGET:g'" % staging_target
+    else:
+        sstate_grep_cmd += " -e '%s' -e '%s'" % (staging_target, staging_host)
+        sstate_sed_cmd += " -e 's:%s:FIXMESTAGINGDIRTARGET:g'" % staging_target
 
     fixmefn =  sstate_builddir + "fixmepath"
 
