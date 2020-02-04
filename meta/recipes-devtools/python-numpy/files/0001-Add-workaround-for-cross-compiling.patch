@@ -1,0 +1,57 @@
+From a72c8eca794ebabcd81f7c59272ee14cf6788f0a Mon Sep 17 00:00:00 2001
+From: Henry Chang <jrhenry@flotechnologies.com>
+Date: Tue, 4 Feb 2020 18:57:31 +0800
+Subject: [PATCH 1/1] Add workaround for cross compiling
+
+---
+ numpy/distutils/fcompiler/__init__.py | 13 +++++++++----
+ numpy/distutils/fcompiler/gnu.py      |  2 +-
+ 2 files changed, 10 insertions(+), 5 deletions(-)
+
+diff --git a/numpy/distutils/fcompiler/__init__.py b/numpy/distutils/fcompiler/__init__.py
+index c926e7378..d80d3e28f 100644
+--- a/numpy/distutils/fcompiler/__init__.py
++++ b/numpy/distutils/fcompiler/__init__.py
+@@ -109,10 +109,10 @@ class FCompiler(CCompiler):
+ 
+     command_vars = EnvironmentConfig(
+         distutils_section='config_fc',
+-        compiler_f77 = ('exe.compiler_f77', 'F77', 'f77exec', None),
+-        compiler_f90 = ('exe.compiler_f90', 'F90', 'f90exec', None),
+-        compiler_fix = ('exe.compiler_fix', 'F90', 'f90exec', None),
+-        version_cmd = ('exe.version_cmd', None, None, None),
++        compiler_f77 = ('exe.compiler_f77', 'FC', 'f77exec', None),
++        compiler_f90 = ('exe.compiler_f90', 'FC', 'f90exec', None),
++        compiler_fix = ('exe.compiler_fix', 'FC', 'f90exec', None),
++        version_cmd = ('exe.version_cmd', 'FC', None, None),
+         linker_so = ('exe.linker_so', 'LDSHARED', 'ldshared', None),
+         linker_exe = ('exe.linker_exe', 'LD', 'ld', None),
+         archiver = (None, 'AR', 'ar', None),
+@@ -315,6 +315,11 @@ class FCompiler(CCompiler):
+             # Note that we get cmd[0] here if the environment doesn't
+             # have anything set
+             exe_from_environ = getattr(self.command_vars, exe_key)
++
++            if exe_from_environ is not None:
++                cmd[0] = exe_from_environ
++                return exe_from_environ
++
+             if not exe_from_environ:
+                 possibles = [f90, f77] + self.possible_executables
+             else:
+diff --git a/numpy/distutils/fcompiler/gnu.py b/numpy/distutils/fcompiler/gnu.py
+index 0ebbe79dc..479841992 100644
+--- a/numpy/distutils/fcompiler/gnu.py
++++ b/numpy/distutils/fcompiler/gnu.py
+@@ -258,7 +258,7 @@ class GnuFCompiler(FCompiler):
+ 
+     def runtime_library_dir_option(self, dir):
+         sep = ',' if sys.platform == 'darwin' else '='
+-        return '-Wl,-rpath%s"%s"' % (sep, dir)
++        return ''
+ 
+ 
+ class Gnu95FCompiler(GnuFCompiler):
+-- 
+2.25.0
+

@@ -10,6 +10,7 @@ SRC_URI = "https://github.com/${SRCNAME}/${SRCNAME}/releases/download/v${PV}/${S
            file://fix_shebang_f2py.patch \
            file://0001-npy_cpu-Add-riscv-support.patch \
            file://0001-Add-site.cfg.patch \
+           file://0001-Add-workaround-for-cross-compiling.patch \
            ${CONFIGFILESURI} "
 SRC_URI[md5sum] = "e3189ee851c3a0e2e6e4c6e80a711ec8"
 SRC_URI[sha256sum] = "1b4a02758fb68a65ea986d808867f1d6383219c234aef553a8741818e795b529"
