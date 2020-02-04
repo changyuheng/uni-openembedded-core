@@ -1,0 +1,28 @@
+From aa8bb0ed3ece1861cab758d5a0a4e65d8450f547 Mon Sep 17 00:00:00 2001
+From: Wendly Li <wendly@flotechnologies.com>
+Date: Sat, 3 Feb 2018 04:09:21 +0800
+Subject: [PATCH] Add site.cfg
+
+---
+ site.cfg.org | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+ create mode 100644 site.cfg.org
+
+diff --git a/site.cfg.org b/site.cfg.org
+new file mode 100644
+index 0000000..3cf8fe7
+--- /dev/null
++++ b/site.cfg.org
+@@ -0,0 +1,10 @@
++[openblas]
++libraries = openblas
++library_dirs = /usr/lib
++include_dirs = /usr/include
++runtime_library_dirs = /usr/lib
++
++[openblas_lapack]
++openblas_lapack_libs = openblas
++libraries = openblas
++library_dirs = /usr/lib
+--
+2.7.4

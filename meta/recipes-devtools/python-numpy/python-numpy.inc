@@ -9,6 +9,7 @@ SRC_URI = "https://github.com/${SRCNAME}/${SRCNAME}/releases/download/v${PV}/${S
            file://0001-Don-t-search-usr-and-so-on-for-libraries-by-default-.patch \
            file://fix_shebang_f2py.patch \
            file://0001-npy_cpu-Add-riscv-support.patch \
+           file://0001-Add-site.cfg.patch \
            ${CONFIGFILESURI} "
 SRC_URI[md5sum] = "e3189ee851c3a0e2e6e4c6e80a711ec8"
 SRC_URI[sha256sum] = "1b4a02758fb68a65ea986d808867f1d6383219c234aef553a8741818e795b529"
@@ -82,9 +83,23 @@ CLEANBROKEN = "1"
 # Make the build fail and replace *config.h with proper one
 # This is a ugly, ugly hack - Koen
 do_compile_prepend_class-target() {
+    cp ${S}/site.cfg.org ${S}/site.cfg
+    sed -i "s;/usr/lib;${STAGING_LIBDIR};g" ${S}/site.cfg
+    sed -i "s;/usr/include;${STAGING_INCDIR};g" ${S}/site.cfg
     ${STAGING_BINDIR_NATIVE}/${PYTHON_PN}-native/${PYTHON_PN} setup.py build ${DISTUTILS_BUILD_ARGS} || \
     true
     cp ${WORKDIR}/*config.h ${S}/build/$(ls ${S}/build | grep src)/numpy/core/include/numpy/
+}
+
+do_compile_prepend_class-native() {
+    cp ${S}/site.cfg.org ${S}/site.cfg
+    sed -i "s;/usr/lib;${STAGING_LIBDIR};g" ${S}/site.cfg
+    sed -i "s;/usr/include;${STAGING_INCDIR};g" ${S}/site.cfg
+}
+
+do_install_append_class-target() {
+    sed -i "s;${RECIPE_SYSROOT};;g" ${D}${PYTHON_SITEPACKAGES_DIR}/numpy/distutils/site.cfg
+    sed -i "s;${RECIPE_SYSROOT};;g" `find ${D} | grep __config__.py`
 }
 
 FILES_${PN}-staticdev += "${PYTHON_SITEPACKAGES_DIR}/numpy/core/lib/*.a"
