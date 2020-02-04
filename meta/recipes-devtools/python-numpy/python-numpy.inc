@@ -103,6 +103,8 @@ do_install_append_class-target() {
     sed -i "s;${RECIPE_SYSROOT};;g" `find ${D} | grep __config__.py`
 }
 
+EXTRA_STAGING_FIXMES += "STAGING_LIBDIR"
+
 FILES_${PN}-staticdev += "${PYTHON_SITEPACKAGES_DIR}/numpy/core/lib/*.a"
 
 # install what is needed for numpy.test()
