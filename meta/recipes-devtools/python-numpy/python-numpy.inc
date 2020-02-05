@@ -9,11 +9,9 @@ SRC_URI = "https://github.com/${SRCNAME}/${SRCNAME}/releases/download/v${PV}/${S
            file://0001-Don-t-search-usr-and-so-on-for-libraries-by-default-.patch \
            file://fix_shebang_f2py.patch \
            file://0001-npy_cpu-Add-riscv-support.patch \
-           file://0001-Add-site.cfg.patch \
-           file://0001-Add-workaround-for-cross-compiling.patch \
            ${CONFIGFILESURI} "
-SRC_URI[md5sum] = "e3189ee851c3a0e2e6e4c6e80a711ec8"
-SRC_URI[sha256sum] = "1b4a02758fb68a65ea986d808867f1d6383219c234aef553a8741818e795b529"
+SRC_URI[md5sum] = "e39878fafb11828983aeec583dda4a06"
+SRC_URI[sha256sum] = "ddbcda194f49e0cf0663fa8131cb9d7a3b876d14dea0047d3c5fdfaf20adbb40"
 
 UPSTREAM_CHECK_URI = "https://github.com/numpy/numpy/releases"
 UPSTREAM_CHECK_REGEX = "(?P<pver>\d+(\.\d+)+)\.tar"
@@ -79,31 +77,13 @@ CONFIGFILESURI_riscv64 = " \
 
 S = "${WORKDIR}/numpy-${PV}"
 
-CLEANBROKEN = "1"
-
 # Make the build fail and replace *config.h with proper one
 # This is a ugly, ugly hack - Koen
 do_compile_prepend_class-target() {
-    cp ${S}/site.cfg.org ${S}/site.cfg
-    sed -i "s;/usr/lib;${STAGING_LIBDIR};g" ${S}/site.cfg
-    sed -i "s;/usr/include;${STAGING_INCDIR};g" ${S}/site.cfg
     ${STAGING_BINDIR_NATIVE}/${PYTHON_PN}-native/${PYTHON_PN} setup.py build ${DISTUTILS_BUILD_ARGS} || \
     true
     cp ${WORKDIR}/*config.h ${S}/build/$(ls ${S}/build | grep src)/numpy/core/include/numpy/
 }
-
-do_compile_prepend_class-native() {
-    cp ${S}/site.cfg.org ${S}/site.cfg
-    sed -i "s;/usr/lib;${STAGING_LIBDIR};g" ${S}/site.cfg
-    sed -i "s;/usr/include;${STAGING_INCDIR};g" ${S}/site.cfg
-}
-
-do_install_append_class-target() {
-    sed -i "s;${RECIPE_SYSROOT};;g" ${D}${PYTHON_SITEPACKAGES_DIR}/numpy/distutils/site.cfg
-    sed -i "s;${RECIPE_SYSROOT};;g" `find ${D} | grep __config__.py`
-}
-
-EXTRA_STAGING_FIXMES += "STAGING_LIBDIR"
 
 FILES_${PN}-staticdev += "${PYTHON_SITEPACKAGES_DIR}/numpy/core/lib/*.a"
 
