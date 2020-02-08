@@ -8,24 +8,7 @@ GOROOT = "${STAGING_LIBDIR}/go"
 export GOROOT
 export GOROOT_FINAL = "${libdir}/go"
 
-export GOARCH = "${TARGET_GOARCH}"
-export GOOS = "${TARGET_GOOS}"
-export GOHOSTARCH="${BUILD_GOARCH}"
-export GOHOSTOS="${BUILD_GOOS}"
-
-GOARM[export] = "0"
-GOARM_arm_class-target = "${TARGET_GOARM}"
-GOARM_arm_class-target[export] = "1"
-
-GO386[export] = "0"
-GO386_x86_class-target = "${TARGET_GO386}"
-GO386_x86_class-target[export] = "1"
-
-GOMIPS[export] = "0"
-GOMIPS_mips_class-target = "${TARGET_GOMIPS}"
-GOMIPS_mips_class-target[export] = "1"
-
-DEPENDS_GOLANG_class-target = "virtual/${TUNE_PKGARCH}-go virtual/${TARGET_PREFIX}go-runtime"
+DEPENDS_GOLANG_class-target = "virtual/${TARGET_PREFIX}go virtual/${TARGET_PREFIX}go-runtime"
 DEPENDS_GOLANG_class-native = "go-native"
 DEPENDS_GOLANG_class-nativesdk = "virtual/${TARGET_PREFIX}go-crosssdk virtual/${TARGET_PREFIX}go-runtime"
 
@@ -62,6 +45,7 @@ GO_INSTALL_FILTEROUT ?= "${GO_IMPORT}/vendor/"
 
 B = "${WORKDIR}/build"
 export GOPATH = "${B}"
+export GOCACHE = "off"
 export GOTMPDIR ?= "${WORKDIR}/go-tmp"
 GOTMPDIR[vardepvalue] = ""
 
@@ -130,7 +114,7 @@ go_do_install() {
 	install -d ${D}${libdir}/go/src/${GO_IMPORT}
 	tar -C ${S}/src/${GO_IMPORT} -cf - --exclude-vcs --exclude '*.test' --exclude 'testdata' . | \
 		tar -C ${D}${libdir}/go/src/${GO_IMPORT} --no-same-owner -xf -
-	tar -C ${B} -cf - --exclude-vcs pkg | tar -C ${D}${libdir}/go --no-same-owner -xf -
+	tar -C ${B} -cf - pkg | tar -C ${D}${libdir}/go --no-same-owner -xf -
 
 	if [ -n "`ls ${B}/${GO_BUILD_BINDIR}/`" ]; then
 		install -d ${D}${bindir}
@@ -195,13 +179,3 @@ FILES_${PN}-staticdev = "${libdir}/go/pkg"
 
 INSANE_SKIP_${PN} += "ldflags"
 INSANE_SKIP_${PN}-ptest += "ldflags"
-
-# Add -buildmode=pie to GOBUILDFLAGS to satisfy "textrel" QA checking, but mips
-# doesn't support -buildmode=pie, so skip the QA checking for mips and its
-# variants.
-python() {
-    if 'mips' in d.getVar('TARGET_ARCH'):
-        d.appendVar('INSANE_SKIP_%s' % d.getVar('PN'), " textrel")
-    else:
-        d.appendVar('GOBUILDFLAGS', ' -buildmode=pie')
-}

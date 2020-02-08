@@ -1,9 +1,9 @@
 inherit cross
 
-PROVIDES = "virtual/${TUNE_PKGARCH}-go"
+PROVIDES = "virtual/${TARGET_PREFIX}go"
 DEPENDS = "go-native"
 
-PN = "go-cross-${TUNE_PKGARCH}"
+PN = "go-cross-${TARGET_ARCH}"
 
 export GOHOSTOS = "${BUILD_GOOS}"
 export GOHOSTARCH = "${BUILD_GOARCH}"
@@ -14,6 +14,7 @@ export GO386 = "${TARGET_GO386}"
 export GOMIPS = "${TARGET_GOMIPS}"
 export GOROOT_BOOTSTRAP = "${STAGING_LIBDIR_NATIVE}/go"
 export GOROOT_FINAL = "${libdir}/go"
+export GOCACHE = "off"
 CC = "${@d.getVar('BUILD_CC').strip()}"
 
 do_configure[noexec] = "1"
