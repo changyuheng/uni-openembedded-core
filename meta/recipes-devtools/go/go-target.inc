@@ -1,4 +1,4 @@
-DEPENDS = "virtual/${TUNE_PKGARCH}-go go-native"
+DEPENDS = "virtual/${TARGET_PREFIX}go go-native"
 DEPENDS_class-nativesdk = "virtual/${TARGET_PREFIX}go-crosssdk go-native"
 
 export GOHOSTOS = "${BUILD_GOOS}"
@@ -40,7 +40,7 @@ do_install() {
 	for f in ${B}/${GO_BUILD_BINDIR}/*; do
 		name=`basename $f`
 		install -m 0755 $f ${D}${libdir}/go/bin/
-		ln -sf ../${baselib}/go/bin/$name ${D}${bindir}/
+		ln -sf ../${BASELIB}/go/bin/$name ${D}${bindir}/
 	done
 }
 
